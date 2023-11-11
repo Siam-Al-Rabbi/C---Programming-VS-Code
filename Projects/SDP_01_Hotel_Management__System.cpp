@@ -304,7 +304,7 @@ void bill_dual_non_ac()
     displayBill(totalCost);
 }
 
-/*void welcome_ani() {
+void welcome_ani() {
     if (!welcomeAnimationShown) {
         string welcome = "\t\t  Hotel Management System \n\n\t\t   Welcome To Hotel Relax \n\n\n\t\t Developed By: \t TEAM INFINITY \n\n\n";
         for (char c : welcome) {
@@ -318,7 +318,7 @@ void bill_dual_non_ac()
         getch();
 
     }
-}*/
+}
 
 void screenClear()
 {
@@ -359,7 +359,7 @@ int main()
 
     screenClear();
     color();
-    // welcome_ani();
+    welcome_ani();
 
     Title();
     setRoomCosts();
