@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <thread>
+#include <chrono>
 #include <conio.h>
 #include <set>
 #include <windows.h>
@@ -70,14 +71,14 @@ struct CostRecord
 {
     string customerName;
     string roomType;
-    int roomNumber; // Add room number field
+    int roomNumber; 
     int nights;
     double roomCost;
     double payment;
 };
 
-vector<CostRecord> costHistory; // Initialize or declare the costHistory vector
-double totalCost = 0.0;         // Initialize totalCost
+vector<CostRecord> costHistory; 
+double totalCost = 0.0;        
 
 void SaveTotalCost(double total)
 {
@@ -94,7 +95,7 @@ double LoadTotalCost()
 
     while (getline(totalCostFile, line))
     {
-        // Parse the line to extract the total cost value
+       
         size_t pos = line.find('$');
         if (pos != string::npos)
         {
@@ -309,16 +310,16 @@ void welcome_ani() {
         string welcome = "\t\t  Hotel Management System \n\n\t\t   Welcome To Hotel Relax \n\n\n\t\t Developed By: \t TEAM INFINITY \n\n\n";
         for (char c : welcome) {
             cout << c;
-            this_thread::sleep_for(std::chrono::milliseconds(100));
+            Sleep(100); 
         }
         cout << std::endl;
-        welcomeAnimationShown = true; // Mark the welcome animation as shown
+        welcomeAnimationShown = true;
 
-        cout<<"\t\t\t Press any key to continue...!! \n";
-        getch();
-
+        cout << "\t\t\t Press any key to continue...!! \n";
+        _getch();  
     }
 }
+
 
 void screenClear()
 {
