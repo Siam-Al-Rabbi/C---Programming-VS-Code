@@ -18,7 +18,6 @@ int singleNonACCost = 50;
 int dualACCost = 200;
 int dualNonACCost = 100;
 double restaurantBill = 0.0;
-
 string name;
 string address;
 string contactNumber;
@@ -28,9 +27,7 @@ int main();
 void screenClear();
 void color();
 void Title();
-// void takeOrders();
 void retrieveAndDisplayBill();
-// void displayBill(const string& name, const string& address, const string& contactNumber, const string& email, double totalCost);
 void displayBill(double totalCost);
 void displayAllBills();
 double calculateTotalBill();
@@ -41,22 +38,61 @@ void chooseRoomType();
 void bookaroom();
 void displayRoomAvailability();
 void checkOut();
-void login();
-void registr();
-void forgot();
+bool login_user();
+void register_user();
+void forgot_password();
+
+bool is_valid_username(const string &username)
+{
+    for (char ch : username)
+    {
+        if (!isalnum(ch) && ch != '_')
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool is_valid_password(const string &password)
+{
+    if (password.length() < 8 || password.length() > 16)
+    {
+        return false;
+    }
+
+    bool has_upper = false;
+    bool has_digit = false;
+    bool has_special = false;
+
+    for (char ch : password)
+    {
+        if (isupper(ch))
+        {
+            has_upper = true;
+        }
+        else if (isdigit(ch))
+        {
+            has_digit = true;
+        }
+        else if (ispunct(ch))
+        {
+            has_special = true;
+        }
+    }
+
+    return has_upper && has_digit && has_special;
+}
 
 void DisplayDualNonACAvailability();
 void DisplayDualACAvailability();
 void DisplaySingleNonACAvailability();
 void DisplaySingleACAvailability();
 void listAvailableRoomNumbers(int totalRooms);
-
 bool welcomeAnimationShown = false;
 void login();
 void registr();
 void forgot();
-// double placeRestaurantOrder();
-
 int totalSingleACRooms = 20;
 int totalSingleNonACRooms = 20;
 int totalDualACRooms = 40;
@@ -64,26 +100,24 @@ int totalDualNonACRooms = 20;
 set<int> bookedRooms;
 
 double placeOrder(int choice, double totalBill, string &itemName, int &itemPrice, int &quantity, string &orderDetails);
-
 double placeRestaurantOrder(double totalBill);
-
 struct CostRecord
 {
     string customerName;
     string roomType;
-    int roomNumber; 
+    int roomNumber;
     int nights;
     double roomCost;
     double payment;
 };
 
-vector<CostRecord> costHistory; 
-double totalCost = 0.0;        
+vector<CostRecord> costHistory;
+double totalCost = 0.0;
 
 void SaveTotalCost(double total)
 {
     ofstream totalCostFile("total_cost.txt");
-    totalCostFile << "Total Cost: $" << total << endl;
+    totalCostFile << "Total Cost: BDT" << total << endl;
     totalCostFile.close();
 }
 
@@ -93,15 +127,22 @@ double LoadTotalCost()
     ifstream totalCostFile("total_cost.txt");
     string line;
 
-    while (getline(totalCostFile, line))
+    try
     {
-       
-        size_t pos = line.find('$');
-        if (pos != string::npos)
+        while (getline(totalCostFile, line))
         {
-            string costStr = line.substr(pos + 1);
-            total = stod(costStr);
+            size_t pos = line.find('BDT');
+            if (pos != string::npos)
+            {
+                string costStr = line.substr(pos + 1);
+                total = stod(costStr);
+            }
         }
+    }
+    catch (const std::invalid_argument &e)
+    {
+        cerr << "Error converting string to double: " << e.what() << endl;
+        total = 0.0;
     }
 
     totalCostFile.close();
@@ -129,8 +170,8 @@ void AddToCostHistory(const string &customerName, const string &roomType, int ro
         historyFile << "Room Type: " << record.roomType << endl;
         historyFile << "Room Number: " << record.roomNumber << endl;
         historyFile << "Nights: " << record.nights << endl;
-        historyFile << "Room Cost: $" << record.roomCost << endl;
-        historyFile << "Payment Amount: $" << record.payment << endl;
+        historyFile << "Room Cost: BDT" << record.roomCost << endl;
+        historyFile << "Payment Amount: BDT" << record.payment << endl;
         historyFile << "---------------------------" << endl;
         historyFile.close();
     }
@@ -156,15 +197,16 @@ void ShowTotalCost()
     }
     else
     {
-        cout << "Total Room Cost: $" << totalRoomCost << endl;
+        cout << "Total Room Cost: BDT" << totalRoomCost << endl;
     }
 
-    cout << "Total Restaurant Bill: $" << restaurantBill << endl;
+    cout << "Total Restaurant Bill: BDT" << restaurantBill << endl;
 
-    cout << "Total Cost (Room + Restaurant): $" << total << endl;
+    cout << "Total Cost (Room + Restaurant): BDT " << total << endl;
 
     cout << "Press any key to continue...";
     getch();
+    bookaroom();
 }
 
 void ShowCostHistory()
@@ -189,21 +231,11 @@ void ShowCostHistory()
 
     cout << "Press any key to continue...";
     getch();
+    bookaroom();
 }
 
 void setRoomCosts()
 {
-    /*cout << "Set Room Costs:\n";
-    cout << "1. Single AC Room: $";
-    cin >> singleACCost;
-    cout << "2. Single Non-AC Room: $";
-    cin >> singleNonACCost;
-    cout << "3. Dual AC Room: $";
-    cin >> dualACCost;
-    cout << "4. Dual Non-AC Room: $";
-    cin >> dualNonACCost;
-    cout << "Room costs updated successfully.\n";*/
-
     singleACCost = 5000.0;
     singleNonACCost = 2500.0;
     dualACCost = 10000.0;
@@ -305,21 +337,23 @@ void bill_dual_non_ac()
     displayBill(totalCost);
 }
 
-void welcome_ani() {
-    if (!welcomeAnimationShown) {
-        string welcome = "\t\t  Hotel Management System \n\n\t\t   Welcome To Hotel Relax \n\n\n\t\t Developed By: \t TEAM INFINITY \n\n\n";
-        for (char c : welcome) {
+void welcome_ani()
+{
+    if (!welcomeAnimationShown)
+    {
+        string welcome = "\t\t  Hotel  Management  System \n\n\t\t   Welcome To Hotel Relax \n\n\n\t Developed By: \t\t\t TEAM INFINITY \n\n\n";
+        for (char c : welcome)
+        {
             cout << c;
-            Sleep(100); 
+            Sleep(100);
         }
         cout << std::endl;
         welcomeAnimationShown = true;
 
-        cout << "\t\t\t Press any key to continue...!! \n";
-        _getch();  
+        cout << "\t\t Press any key to continue...!! \n";
+        _getch();
     }
 }
-
 
 void screenClear()
 {
@@ -329,18 +363,56 @@ void color()
 {
     system("color A");
 }
+
 void Title()
 {
-    cout << "\t   .....................................\n\n";
-    cout << "                    Welcome to login page                               \n\n";
+    cout << "\t\t ................................\n\n";
+    cout << "\t\t\tWelcome to login page\n\n";
     cout << "\t\t ................................\n";
     cout << "\t\t[Customer Login and Access Control]\n";
     cout << "\t\t ===============================\n\n";
-    cout << "1.LOGIN" << endl;
-    cout << "2.REGISTER" << endl;
-    cout << "3.FORGOT PASSWORD (or) USERNAME" << endl;
-    cout << "4.Exit" << endl;
-    cout << "\nEnter your choice :";
+}
+
+void log_reg()
+{
+
+    int choice;
+
+    do
+    {
+        cout << "1. Register\n2. Login\n3. Forgot Password\n4. Exit\n";
+        cout << "Enter your choice: ";
+        cin >> choice;
+        cin.ignore();
+
+        switch (choice)
+        {
+        case 1:
+            register_user();
+            break;
+        case 2:
+            if (login_user())
+            {
+                cout << "\t\tLogin successful!" << endl;
+                getch();
+                bookaroom();
+            }
+            else
+            {
+                cout << "Login failed. Invalid username or password." << endl;
+            }
+            break;
+        case 3:
+            forgot_password();
+            break;
+        case 4:
+            cout << "Exiting program. Goodbye!" << endl;
+            exit(0);
+        default:
+            cout << "Invalid choice. Please enter a valid option." << endl;
+        }
+
+    } while (choice != 4);
 }
 
 int main()
@@ -361,12 +433,11 @@ int main()
     screenClear();
     color();
     welcome_ani();
-
+    screenClear();
     Title();
+    log_reg();
     setRoomCosts();
-
     LoadTotalCost();
-
     totalCost = LoadTotalCost();
 
     ifstream historyFile("cost_history.txt");
@@ -399,28 +470,6 @@ int main()
         restaurantBillFile.close();
     }
 
-    int userChoice;
-
-    cin >> userChoice;
-    cout << endl;
-    switch (userChoice)
-    {
-    case 1:
-        login();
-        break;
-    case 2:
-        registr();
-        break;
-    case 3:
-        forgot();
-        break;
-    default:
-        system("cls");
-        cout << "You've made a mistake , Try again..\n"
-             << endl;
-        main();
-    }
-
     return 0;
 }
 
@@ -449,7 +498,7 @@ void bookaroom()
 {
     int book;
     system("cls");
-    cout << "1. Book a room \n 2.Order food \n 3.Show Cost History \n 4.Total Cost \n 5.Check-Out \n 6. Back to the main menu" << endl;
+    cout << "1. Book a room \n 2.Order food \n 3.Show Cost History \n 4.Total Cost \n 5.Check-Out \n 6. Logout" << endl;
     cout << "Enter your choice: ";
     cin >> book;
 
@@ -471,11 +520,6 @@ void bookaroom()
     else if (book == 3)
     {
         system("cls");
-        // displayBill(name, address, contactNumber, email, totalCost);
-        // retrieveAndDisplayBill();
-        // displayBill(totalCost);
-        // displayAllBills();
-
         ShowCostHistory();
     }
 
@@ -507,7 +551,7 @@ void chooseRoomType()
 {
     int roomChoice;
     system("cls");
-    cout << "1. Single Room\n2. Dual Room\n3. Logout" << endl;
+    cout << "1. Single Bed Room\n2. Dual Bed Room\n3. Logout" << endl;
     cout << "Enter your choice: ";
     cin >> roomChoice;
 
@@ -556,7 +600,7 @@ void chooseSingleRoomType()
     else if (roomType == 3)
     {
         system("cls");
-        main();
+        bookaroom();
     }
     else
     {
@@ -590,7 +634,7 @@ void chooseDualRoomType()
     else if (roomType == 3)
     {
         system("cls");
-        main();
+        bookaroom();
     }
     else
     {
@@ -693,7 +737,7 @@ void DisplaySingleACAvailability()
                 cout << "Room " << roomNumber << " costs BDT" << roomCost << " for " << nights << " night(s)." << endl;
 
                 double payment;
-                cout << "Please enter the payment amount: $";
+                cout << "Please enter the payment amount: BDT";
                 cin >> payment;
 
                 if (payment == roomCost)
@@ -1107,7 +1151,7 @@ void displayBill(double totalCost)
         billFile.close();
     }
 
-    cout << "Total Cost: $" << totalCost << endl;
+    cout << "Total Cost: BDT" << totalCost << endl;
     cout << "Press any key to continue...";
     getch();
 }
@@ -1115,7 +1159,7 @@ void displayBill(double totalCost)
 void displayAllBills()
 {
     ifstream billFile("bills.txt");
-    ifstream restaurantOrderFile("order2.txt"); // Open the restaurant order file
+    ifstream restaurantOrderFile("order2.txt");
 
     if (!billFile)
     {
@@ -1137,7 +1181,6 @@ void displayAllBills()
         {
             if (line.find("Total Cost: BDT") != string::npos)
             {
-                // Read the restaurant bill from the restaurant order file
                 string restaurantBillLine;
                 while (getline(restaurantOrderFile, restaurantBillLine))
                 {
@@ -1163,7 +1206,7 @@ void displayAllBills()
     }
 
     billFile.close();
-    restaurantOrderFile.close(); // Close the restaurant order file
+    restaurantOrderFile.close();
 
     cout << "Press any key to continue...";
     getch();
@@ -1175,7 +1218,7 @@ double calculateTotalBill()
     if (!billFile)
     {
         cout << "No bill information found. Please make a booking first." << endl;
-        return 0.0; // Return 0 if no bills are found
+        return 0.0;
     }
 
     double totalBill = 0.0;
@@ -1185,21 +1228,17 @@ double calculateTotalBill()
     {
         if (line.find("Total Cost: BDT") != string::npos)
         {
-            // Extract the total cost from the line and add it to the total bill
+
             size_t startPos = line.find("BDT");
             if (startPos != string::npos)
             {
-                double cost = stod(line.substr(startPos + 1)); // Extract the cost value
+                double cost = stod(line.substr(startPos + 1));
                 totalBill += cost;
             }
         }
     }
 
     billFile.close();
-
-    // Add the restaurant bill to the total bill
-    // totalBill += restaurantBill;
-
     return totalBill;
 }
 
@@ -1236,7 +1275,7 @@ void displayMenu()
     cout << string(tabCount, '\t') << "15. Rasgulla                                BDT 150" << endl;
     cout << string(tabCount, '\t') << "----------------------------------------------------" << endl;
 
-    cout << string(tabCount, '\t') << "16. EXIT                                          " << endl;
+    cout << string(tabCount, '\t') << "16. Back to main menu                               " << endl;
 
     cout << "\n";
 }
@@ -1308,8 +1347,6 @@ double placeOrder(int choice, double totalBill, string &itemName, int &itemPrice
         itemName = "Rasgulla";
         break;
     case 16:
-        exit(0);
-
         break;
 
     default:
@@ -1332,8 +1369,7 @@ double placeOrder(int choice, double totalBill, string &itemName, int &itemPrice
             orderFile.close();
         }
 
-        orderDetails += "\t\t\t\t\t\t\tYOU ORDER " + itemName + ": " + to_string(itemPrice) + " BDT";
-        orderDetails += "\tQUANTITY: " + to_string(quantity) + "\n\n";
+        orderDetails += "\t\t\t\t\t\t\tYOU ORDER " + itemName + ": " + to_string(itemPrice) + " BDT\tQUANTITY: " + to_string(quantity) + "\n\n";
     }
 
     cout << "\t\t\t\t\tYOUR ORDER RECEIVED " << endl;
@@ -1343,6 +1379,7 @@ double placeOrder(int choice, double totalBill, string &itemName, int &itemPrice
 double placeRestaurantOrder(double totalBill)
 {
     int choice;
+    int payment;
     char anotherOrder;
     string orderDetails = "";
 
@@ -1360,12 +1397,16 @@ double placeRestaurantOrder(double totalBill)
         {
             totalBill = placeOrder(choice, totalBill, itemName, itemPrice, quantity, orderDetails);
 
-            orderDetails += "\t\t\t\t\t\t\tYOU ORDER " + itemName + ": " + to_string(itemPrice) + " BDT";
-            orderDetails += "\tQUANTITY: " + to_string(quantity) + "\n\n";
+            orderDetails += "\t\t\t\t\t\t\tYOU ORDER " + itemName + ": " + to_string(itemPrice) + " BDT\tQUANTITY: " + to_string(quantity) + "\n\n";
         }
         else if (choice != 16)
         {
             cout << "\n\t\t\t\t\tINVALID ITEM NUMBER. Please enter a valid item number.\n";
+        }
+
+        else if (choice == 16)
+        {
+            bookaroom();
         }
 
         cout << "\n\t\t\t\t\tDO YOU WANT TO ORDER ANOTHER ITEM (Y/N): ";
@@ -1398,6 +1439,13 @@ double placeRestaurantOrder(double totalBill)
     cout << orderDetails << endl;
 
     cout << "\n\t\t\t\t\t\t\t\t    YOUR TOTAL BILL IS " << totalBill << " BDT" << endl;
+    cout << "\t\t\t\t\t\t\t Please make your payment \n\t\t\t\t\t\t\t Enter amount : ";
+    cin >> payment;
+    if (totalBill == payment)
+    {
+        cout << "\t\t\t\t\t\t\t Payment Successfull. \n\t\t\t\t\t\t\tYou will recive your order in 20 Minutes. " << endl;
+        totalBill = 0;
+    }
 
     cout << "\t\t\t\t\t\t\t ================================================" << endl;
 
@@ -1414,6 +1462,7 @@ double placeRestaurantOrder(double totalBill)
 
 void checkOut()
 {
+    screenClear();
     int roomNumber;
     system("cls");
     cout << "Enter the room number to check out: ";
@@ -1497,7 +1546,8 @@ void checkOut()
             }
             updatedFile.close();
 
-            cout << "Room " << roomNumber << " has been successfully checked out." << endl;
+            cout << "Room " << roomNumber << " has been successfully checked out. \n Thank you so much for vising here...\n"
+                 << endl;
         }
         else
         {
@@ -1511,156 +1561,140 @@ void checkOut()
 
     cout << "Press any key to continue...";
     getch();
+    bookaroom();
 }
 
-void login()
+void register_user()
 {
-    int count;
-    string user, pass, u, p;
-    system("cls");
-    cout << "Please enter the following details" << endl;
-    cout << "USERNAME: ";
-    cin >> user;
-    cout << "PASSWORD: ";
-    cin >> pass;
+    screenClear();
+    string username, password, confirm_password;
 
-    ifstream input("database3.txt");
-    while (input >> u >> p)
+    cout << "Enter username: ";
+    getline(cin, username);
+
+    while (!is_valid_username(username))
     {
-        if (u == user && p == pass)
+        cout << "Invalid username! Use only letters, digits, and underscore." << endl;
+        cout << "Enter username: ";
+        getline(cin, username);
+    }
+
+    do
+    {
+        cout << "Enter password: ";
+        getline(cin, password);
+
+        while (!is_valid_password(password))
         {
-            count = 1;
-            system("cls");
+            cout << "Invalid password! Password must be 8-16 characters with at least one uppercase letter, one digit, and one special character." << endl;
+            cout << "Enter password: ";
+            getline(cin, password);
         }
-    }
-    input.close();
-    if (count == 1)
-    {
-        cout << "\nHello " << user << "\n<LOGIN SUCCESSFUL>\nThanks for logging in..\n";
-        cin.get();
-        cin.get();
-        bookaroom();
-    }
-    else
-    {
-        cout << "\nLOGIN ERROR\nPlease check your username and password\n\n";
 
-        cout << "\t\t\t Press any key to continue....\n";
-        getch();
-        main();
-    }
-}
+        cout << "Confirm password: ";
+        getline(cin, confirm_password);
 
-void registr()
-{
+        if (password != confirm_password)
+        {
+            cout << "Passwords do not match. Please try again." << endl;
+        }
 
-    string reguser, regpass, ru, rp;
-    system("cls");
-    cout << "Enter the username :";
-    cin >> reguser;
-    cout << "\nEnter the password :";
-    cin >> regpass;
+    } while (password != confirm_password);
 
-    ofstream reg("database3.txt", ios::app);
-    reg << reguser << ' ' << regpass << endl;
-    system("cls");
-    cout << "\nRegistration Sucessful\n";
+    ofstream outfile("user_data.txt", ios::app);
+    outfile << username << " " << password << endl;
+    outfile.close();
+
+    cout << "Registration successful!" << endl;
     getch();
-
     main();
 }
 
-void forgot()
+bool login_user()
 {
-    int ch;
-    system("cls");
-    cout << "Forgotten ? We're here for help\n";
-    cout << "1.Search your id by username" << endl;
-    cout << "2.Search your id by password" << endl;
-    cout << "3.Main menu" << endl;
-    cout << "Enter your choice :";
-    cin >> ch;
-    switch (ch)
-    {
-    case 1:
-    {
-        int count = 0;
-        string searchuser, su, sp;
-        cout << "\nEnter your remembered username :";
-        cin >> searchuser;
+    screenClear();
+    string username, password, stored_username, stored_password;
 
-        ifstream searchu("database3.txt");
-        while (searchu >> su >> sp)
+    cout << "Enter username: ";
+    getline(cin, username);
+
+    cout << "Enter password: ";
+    getline(cin, password);
+
+    ifstream infile("user_data.txt");
+
+    while (infile >> stored_username >> stored_password)
+    {
+        if (username == stored_username && password == stored_password)
         {
-            if (su == searchuser)
-            {
-                count = 1;
-            }
+            infile.close();
+            return true;
         }
-        searchu.close();
-        if (count == 1)
+    }
+
+    infile.close();
+    return false;
+}
+
+void forgot_password()
+{
+    screenClear();
+    string username, new_password, confirm_password;
+    bool found = false;
+
+    cout << "Enter your username to reset password: ";
+    getline(cin, username);
+
+    ifstream infile("user_data.txt");
+    ofstream tempfile("temp_user_data.txt");
+
+    string stored_username, stored_password;
+    while (infile >> stored_username >> stored_password)
+    {
+        if (username == stored_username)
         {
-            cout << "\n\nHurray, account found\n";
-            cout << "\nYour password is " << sp;
-            cin.get();
-            cin.get();
-            system("cls");
-            main();
+            found = true;
+            cout << "Enter new password: ";
+            getline(cin, new_password);
+
+            while (!is_valid_password(new_password))
+            {
+                cout << "Invalid password! Password must be 8-16 characters with at least one uppercase letter, one digit, and one special character." << endl;
+                cout << "Enter new password: ";
+                getline(cin, new_password);
+            }
+
+            cout << "Confirm new password: ";
+            getline(cin, confirm_password);
+
+            if (new_password != confirm_password)
+            {
+                cout << "Passwords do not match. Please try again." << endl;
+            }
+            else
+            {
+                tempfile << username << " " << new_password << endl;
+            }
         }
         else
         {
-            cout << "\nSorry, Your userID is not found in our database\n";
-            cout << "\nPlease kindly contact your system administrator for more details \n";
-            cin.get();
-            cin.get();
-            main();
+            tempfile << stored_username << " " << stored_password << endl;
         }
-        break;
     }
-    case 2:
+
+    infile.close();
+    tempfile.close();
+
+    if (found)
     {
-        int count = 0;
-        string searchpass, su2, sp2;
-        cout << "\nEnter the remembered password :";
-        cin >> searchpass;
-
-        ifstream searchp("database3.txt");
-        while (searchp >> su2 >> sp2)
-        {
-            if (sp2 == searchpass)
-            {
-                count = 1;
-            }
-        }
-        searchp.close();
-        if (count == 1)
-        {
-            cout << "\nYour password is found in the database \n";
-            cout << "\nYour Id is : " << su2;
-            cin.get();
-            cin.get();
-            system("cls");
-            main();
-        }
-        else
-        {
-            cout << "Sorry, We cannot found your password in our database \n";
-            cout << "\nkindly contact your administrator for more information\n";
-            cin.get();
-            cin.get();
-            main();
-        }
-
-        break;
+        remove("user_data.txt");
+        rename("temp_user_data.txt", "user_data.txt");
+        cout << "Password reset successful!" << endl;
+        getch();
+        screenClear();
     }
-
-    case 3:
+    else
     {
-        cin.get();
-        main();
+        cout << "Username not found. Please check your username and try again." << endl;
     }
-    default:
-        cout << "Sorry, You entered wrong choice. Kindly try again" << endl;
-        forgot();
-    }
-} 
+}
