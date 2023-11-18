@@ -18,6 +18,7 @@ int singleNonACCost = 50;
 int dualACCost = 200;
 int dualNonACCost = 100;
 double restaurantBill = 0.0;
+
 string name;
 string address;
 string contactNumber;
@@ -89,10 +90,12 @@ void DisplayDualACAvailability();
 void DisplaySingleNonACAvailability();
 void DisplaySingleACAvailability();
 void listAvailableRoomNumbers(int totalRooms);
+
 bool welcomeAnimationShown = false;
 void login();
 void registr();
 void forgot();
+
 int totalSingleACRooms = 20;
 int totalSingleNonACRooms = 20;
 int totalDualACRooms = 40;
@@ -100,7 +103,9 @@ int totalDualNonACRooms = 20;
 set<int> bookedRooms;
 
 double placeOrder(int choice, double totalBill, string &itemName, int &itemPrice, int &quantity, string &orderDetails);
+
 double placeRestaurantOrder(double totalBill);
+
 struct CostRecord
 {
     string customerName;
@@ -127,22 +132,14 @@ double LoadTotalCost()
     ifstream totalCostFile("total_cost.txt");
     string line;
 
-    try
+    while (getline(totalCostFile, line))
     {
-        while (getline(totalCostFile, line))
+        size_t pos = line.find('BDT');
+        if (pos != string::npos)
         {
-            size_t pos = line.find('BDT');
-            if (pos != string::npos)
-            {
-                string costStr = line.substr(pos + 1);
-                total = stod(costStr);
-            }
+            string costStr = line.substr(pos + 1);
+            total = stod(costStr);
         }
-    }
-    catch (const std::invalid_argument &e)
-    {
-        cerr << "Error converting string to double: " << e.what() << endl;
-        total = 0.0;
     }
 
     totalCostFile.close();
@@ -206,7 +203,6 @@ void ShowTotalCost()
 
     cout << "Press any key to continue...";
     getch();
-    bookaroom();
 }
 
 void ShowCostHistory()
@@ -231,7 +227,6 @@ void ShowCostHistory()
 
     cout << "Press any key to continue...";
     getch();
-    bookaroom();
 }
 
 void setRoomCosts()
@@ -393,7 +388,7 @@ void log_reg()
         case 2:
             if (login_user())
             {
-                cout << "\t\tLogin successful!" << endl;
+                cout << "Login successful!" << endl;
                 getch();
                 bookaroom();
             }
@@ -498,7 +493,7 @@ void bookaroom()
 {
     int book;
     system("cls");
-    cout << "1. Book a room \n 2.Order food \n 3.Show Cost History \n 4.Total Cost \n 5.Check-Out \n 6. Logout" << endl;
+    cout << "1. Book a room \n 2.Order food \n 3.Show Cost History \n 4.Total Cost \n 5.Check-Out \n 6. Back to the main menu" << endl;
     cout << "Enter your choice: ";
     cin >> book;
 
@@ -551,7 +546,7 @@ void chooseRoomType()
 {
     int roomChoice;
     system("cls");
-    cout << "1. Single Bed Room\n2. Dual Bed Room\n3. Logout" << endl;
+    cout << "1. Single Room\n2. Dual Room\n3. Logout" << endl;
     cout << "Enter your choice: ";
     cin >> roomChoice;
 
@@ -1439,12 +1434,11 @@ double placeRestaurantOrder(double totalBill)
     cout << orderDetails << endl;
 
     cout << "\n\t\t\t\t\t\t\t\t    YOUR TOTAL BILL IS " << totalBill << " BDT" << endl;
-    cout << "\t\t\t\t\t\t\t Please make your payment \n\t\t\t\t\t\t\t Enter amount : ";
+    cout << "\t\t\t\t\t\t\t Please make your payment \n\tt\t\t\t\t\t\t Enter amount : ";
     cin >> payment;
     if (totalBill == payment)
     {
-        cout << "\t\t\t\t\t\t\t Payment Successfull. \n\t\t\t\t\t\t\tYou will recive your order in 20 Minutes. " << endl;
-        totalBill = 0;
+        cout << "\t\t\t\t\t\t\t Payment Successfull. You will recive your order in 20 Minutes. " << endl;
     }
 
     cout << "\t\t\t\t\t\t\t ================================================" << endl;
@@ -1546,8 +1540,7 @@ void checkOut()
             }
             updatedFile.close();
 
-            cout << "Room " << roomNumber << " has been successfully checked out. \n Thank you so much for vising here...\n"
-                 << endl;
+            cout << "Room " << roomNumber << " has been successfully checked out." << endl;
         }
         else
         {
@@ -1561,7 +1554,6 @@ void checkOut()
 
     cout << "Press any key to continue...";
     getch();
-    bookaroom();
 }
 
 void register_user()
@@ -1649,6 +1641,7 @@ void forgot_password()
     ofstream tempfile("temp_user_data.txt");
 
     string stored_username, stored_password;
+
     while (infile >> stored_username >> stored_password)
     {
         if (username == stored_username)
@@ -1681,6 +1674,7 @@ void forgot_password()
             tempfile << stored_username << " " << stored_password << endl;
         }
     }
+    
 
     infile.close();
     tempfile.close();

@@ -1,0 +1,14 @@
+Customer: Siam
+Room Type: Single AC
+Room Number: 15
+Nights: 3
+Room Cost: BDT300
+Payment Amount: BDT300
+---------------------------
+Customer: Uday
+Room Type: Dual AC
+Room Number: 80
+Nights: 5
+Room Cost: BDT1000
+Payment Amount: BDT1000
+---------------------------
